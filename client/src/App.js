@@ -24,7 +24,7 @@ class App extends Component {
 
     // var ws = new WebSocket('ws://localhost:8080');
     // console.log('location', location);
-    var ws = new WebSocket('ws://172.30.1.13:8080');
+    var ws = new WebSocket('ws://172.30.1.13:8080?shopId=1234');
     
     ws.onopen = () => {
         console.log('websocket is connected ...')
@@ -35,10 +35,10 @@ class App extends Component {
         console.log('event.data', typeof event.data, event.data);
         // alert(event.data);
         try {
-          const data = JSON.parse(event.data).param;
+          const data = JSON.parse(event.data);
           console.log('data', typeof data, data);
-          const newData = JSON.parse(data);
-          console.log('newData', typeof newData, newData);
+          // const newData = JSON.parse(data);
+          // console.log('newData', typeof newData, newData);
           // const parseData = JSON.parse(newData);
 
           // let newDataArr = [];
@@ -47,7 +47,7 @@ class App extends Component {
 
 
           this.setState({
-            messages: [newData].concat(this.state.messages),
+            messages: [data].concat(this.state.messages),
           });
 
         } catch (error) {
