@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
+import Requestion from '../src/components/Requestion';
 // import _ from 'lodash';
 
 class App extends Component {
@@ -10,79 +12,113 @@ class App extends Component {
     super(props);
 
     this.state = {
-      messages: [],
+      logged: false,
+      userInfo: {},
     };
   }
 
   componentDidMount() {
-    // ws.on('message', function incoming(data) {
-    //   console.log(data);
-    // });
-    // this.callApi()
-    //   .then(res => console.log('res', res))
-    //   .catch(err => console.log(err));
-
-    // var ws = new WebSocket('ws://localhost:8080');
-    // console.log('location', location);
-    var ws = new WebSocket('ws://172.30.1.13:8080?shopId=1234');
     
-    ws.onopen = () => {
-        console.log('websocket is connected ...')
-        // ws.send('connected')
-    }
+    window.fbAsyncInit = function() {
+      window.FB.init({
+        appId       : '572495833129478',
+        cookie      : true,
+        xfbml       : true,
+        version     : 'v2.1' 
+      });
 
-    ws.onmessage = event => {
-        console.log('event.data', typeof event.data, event.data);
-        // alert(event.data);
-        try {
-          const data = JSON.parse(event.data);
-          console.log('data', typeof data, data);
-          // const newData = JSON.parse(data);
-          // console.log('newData', typeof newData, newData);
-          // const parseData = JSON.parse(newData);
+      let userInfo = {};
 
-          // let newDataArr = [];
-          // newDataArr.push(newData);
-          // console.log('newDataArr', typeof newDataArr, newDataArr);
-
-
-          this.setState({
-            messages: [data].concat(this.state.messages),
-          });
-
-        } catch (error) {
-          console.log('Error!', error);
+      window.FB.Event.subscribe('auth.statusChange', response => {
+        // console.log('subscritbe response', response)
+        userInfo.token = response.authResponse.accessToken;
+        userInfo.signedRequest = response.authResponse.signedRequest;
+  
+        if(response.authResponse) {
+          fetch(`https://graph.facebook.com/me?access_token=${userInfo.token.toString()}`)
+            .then(res =>res.json())
+            .then(res => {
+              console.log('res 1', res);
+              userInfo.name = res.name;
+              userInfo.userId = res.id;
+            })
+            .then(() => {
+              fetch(`https://graph.facebook.com/${userInfo.userId}/picture?type=square`)
+                .then(res => {
+                    userInfo.profileURL = res.url;
+                    console.log('userInfo', userInfo);
+                    // redux state change 
+                    // 2018-03-22 박현도
+                    this.updateLoggedInState(userInfo);
+                })
+                .catch(err => {
+                    console.log('error!', err);
+                })
+            })
+            .catch(err => {
+              console.log('error!', err);
+            })
         }
-    }
+        else {
+          this.updateLoggedOutState();
+        }
+      });
+
+    }.bind(this);
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'https://connect.facebook.net/ko_KR/sdk.js#xfbml=1&version=v3.0&appId=126674078143022&autoLogAppEvents=1';
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  }
+
+  updateLoggedInState(userInfo) {
+    console.log('Logged In', userInfo);
+    this.setState(state => ({
+      ...state,
+      userInfo: userInfo,
+      logged: true,
+    }));
+  }
+
+  updateLoggedOutState() {
+    console.log('Logged Out');
+    this.setState({ logged: false });
   }
 
   render() {
-
-    let messages = this.state.messages;
-
-    console.log('messages', messages);
-
+    const { logged, userInfo } = this.state;
+    // console.log('logged status change', logged);
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">LOT 점주님 페이지</h1>
-        </header>
-        <p className="App-intro">
-          새로운 페이스북 공유 요청이 보여집니다.
-        </p>
-
-        
+      <Router>
         {
-          messages.map((val,key) => {
-            console.log('val', val);
-            return <p key={key} style={{margin: 10}}>{val.userName} 님이 {val.tableNum}번 테이블 에서 방금 페이스북 공유를 완료했습니다. </p>
-          })
+          ( logged === true ) ? (
+              <Requestion userInfo={this.state.userInfo}/>
+          ) : (
+            <div className="App">
+              <header className="App-header">
+                <img src={logo} className="App-logo" alt="logo" />
+                <h1 className="App-title">LOT 점주님 페이지</h1>
+              </header>
+              <p className="App-intro">
+                먼저 페이스북으로 로그인하세요.
+              </p>
+              <div className="fb-login-button" data-width="100" data-max-rows="1" data-size="large" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="true" data-use-continue-as="false"></div>
+            </div>
+          )
         }
-        
-      </div>
+      </Router>
     );
   }
 }
+
+const About = () => (
+  <div>
+    <h2>About</h2>
+  </div>
+);
 
 export default App;
