@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+// import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, } from "react-router-dom";
 
 import Requestion from '../src/components/Requestion';
 // import _ from 'lodash';
@@ -40,7 +41,7 @@ class App extends Component {
             .then(res => {
               console.log('res 1', res);
               userInfo.name = res.name;
-              userInfo.userId = res.id;
+              userInfo.id = res.id;
             })
             .then(() => {
               fetch(`https://graph.facebook.com/${userInfo.userId}/picture?type=square`)
@@ -96,7 +97,7 @@ class App extends Component {
       <Router>
         {
           ( logged === true ) ? (
-              <Requestion userInfo={this.state.userInfo}/>
+              <Requestion userInfo={userInfo}/>
           ) : (
             <div className="App">
               <header className="App-header">
@@ -114,11 +115,5 @@ class App extends Component {
     );
   }
 }
-
-const About = () => (
-  <div>
-    <h2>About</h2>
-  </div>
-);
 
 export default App;
